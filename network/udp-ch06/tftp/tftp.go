@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	address = flag.String("a", "127.0.0.1:69", "listen address")
-	payload = flag.String("p", "payload.svg", "file to serve to clients")
+	address = flag.String("a", "127.0.0.1:5173", "listen address")
+	payload = flag.String("p", "./tftp/payload.svg", "file to serve to clients")
 )
 
 func main() {
