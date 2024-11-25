@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	DatagramSize = 516              // Maximum supperted datagram size
+	DatagramSize = 516              // Maximum supported datagram size
 	BlockSize    = DatagramSize - 4 // Datagram minus 4 bytes header
 )
 
@@ -17,7 +17,7 @@ type OpCode uint16
 
 const (
 	OpRRQ OpCode = iota + 1
-	_
+	_            // no WRQ
 	OpData
 	OpAck
 	OpErr
@@ -48,36 +48,36 @@ func (rr ReadReq) MarshalBinary() ([]byte, error) {
 	}
 
 	// OpCode + Filename + 0b + Mode + 0b
-	cap := 2 + 2 + len(rr.Filename) + 1 + len(rr.Mode) + 1
+	cap := 2 + 2 + len(rr.Filename) + 1 + len(mode) + 1
 
-	b := new(bytes.Buffer)
-	b.Grow(cap)
+	buf := new(bytes.Buffer)
+	buf.Grow(cap)
 
-	if err := binary.Write(b, binary.BigEndian, OpRRQ); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, OpRRQ); err != nil {
 		return nil, err
 	}
 
-	if _, err := b.WriteString(rr.Filename); err != nil {
+	if _, err := buf.WriteString(rr.Filename); err != nil {
 		return nil, err
 	}
 
-	if err := b.WriteByte(0); err != nil {
+	if err := buf.WriteByte(0); err != nil {
 		return nil, err
 	}
 
-	if _, err := b.WriteString(mode); err != nil {
+	if _, err := buf.WriteString(mode); err != nil {
 		return nil, err
 	}
 
-	if err := b.WriteByte(0); err != nil {
+	if err := buf.WriteByte(0); err != nil {
 		return nil, err
 	}
 
-	return b.Bytes(), nil
+	return buf.Bytes(), nil
 }
 
-func (rr *ReadReq) UnmarhsalBinary(p []byte) error {
-	reader := bytes.NewBuffer(p)
+func (rr *ReadReq) UnmarshalBinary(payload []byte) error {
+	reader := bytes.NewBuffer(payload)
 
 	var code OpCode
 
@@ -94,8 +94,6 @@ func (rr *ReadReq) UnmarhsalBinary(p []byte) error {
 	if err != nil {
 		return errors.New("invalid RRQ")
 	}
-
-	// Remove 0 Byte Delimiter
 	rr.Filename = strings.TrimRight(rr.Filename, "\x00")
 	if len(rr.Filename) == 0 {
 		return errors.New("invalid RRQ")
@@ -105,7 +103,6 @@ func (rr *ReadReq) UnmarhsalBinary(p []byte) error {
 	if err != nil {
 		return errors.New("invalid RRQ")
 	}
-
 	rr.Mode = strings.TrimRight(rr.Mode, "\x00")
 	if len(rr.Mode) == 0 {
 		return errors.New("invalid RRQ")
@@ -113,7 +110,7 @@ func (rr *ReadReq) UnmarhsalBinary(p []byte) error {
 
 	actual := strings.ToLower(rr.Mode)
 	if actual != "octet" {
-		return errors.New("only binary transfers supperted")
+		return errors.New("only binary transfers supported")
 	}
 
 	return nil
@@ -125,40 +122,46 @@ type Data struct {
 }
 
 func (d *Data) MarshalBinary() ([]byte, error) {
-	b := new(bytes.Buffer)
-	b.Grow(DatagramSize)
+	buf := new(bytes.Buffer)
+	buf.Grow(DatagramSize)
 
+	// Increment Block Number
 	d.Block++
 
-	if err := binary.Write(b, binary.BigEndian, OpData); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, OpData); err != nil {
 		return nil, err
 	}
 
-	if err := binary.Write(b, binary.BigEndian, d.Block); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, d.Block); err != nil {
 		return nil, err
 	}
 
-	_, err := io.CopyN(b, d.Payload, BlockSize)
+	_, err := io.CopyN(buf, d.Payload, BlockSize)
 	if err != nil && err != io.EOF {
 		return nil, err
 	}
 
-	return b.Bytes(), nil
+	return buf.Bytes(), nil
 }
 
-func (d *Data) UnmarhsalBinary(p []byte) error {
-	if l := len(p); l < 4 || l > DatagramSize {
+func (d *Data) UnmarshalBinary(payload []byte) error {
+	if l := len(payload); l < 4 || l > DatagramSize {
 		return errors.New("invalid DATA")
 	}
 
-	var opcode OpCode
+	var opCode OpCode
 
-	err := binary.Read(bytes.NewReader(p[:2]), binary.BigEndian, &opcode)
-	if err != nil || opcode != OpData {
+	err := binary.Read(bytes.NewReader(payload[:2]), binary.BigEndian, &opCode)
+	if err != nil || opCode != OpData {
 		return errors.New("invalid DATA")
 	}
 
-	d.Payload = bytes.NewBuffer(p[4:])
+	err = binary.Read(bytes.NewReader(payload[2:4]), binary.BigEndian, &d.Block)
+	if err != nil {
+		return errors.New("invalid DATA")
+	}
+
+	d.Payload = bytes.NewBuffer(payload[4:])
 
 	return nil
 }
@@ -166,32 +169,33 @@ func (d *Data) UnmarhsalBinary(p []byte) error {
 type Ack uint16
 
 func (a Ack) MarshalBinary() ([]byte, error) {
-	cap := 2 + 2 // OpCode + Block Number
+	// OpCode + Block
+	cap := 2 + 2
 
-	b := new(bytes.Buffer)
-	b.Grow(cap)
+	buf := new(bytes.Buffer)
+	buf.Grow(cap)
 
-	if err := binary.Write(b, binary.BigEndian, OpAck); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, OpAck); err != nil {
 		return nil, err
 	}
 
-	if err := binary.Write(b, binary.BigEndian, a); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, a); err != nil {
 		return nil, err
 	}
 
-	return b.Bytes(), nil
+	return buf.Bytes(), nil
 }
 
-func (a Ack) UnmarhsalBinary(payload []byte) error {
-	var code OpCode
+func (a *Ack) UnmarshalBinary(payload []byte) error {
+	var opCode OpCode
 
 	reader := bytes.NewReader(payload)
 
-	if err := binary.Read(reader, binary.BigEndian, &code); err != nil {
+	if err := binary.Read(reader, binary.BigEndian, &opCode); err != nil {
 		return err
 	}
 
-	if code != OpAck {
+	if opCode != OpAck {
 		return errors.New("invalid ACK")
 	}
 
@@ -199,46 +203,45 @@ func (a Ack) UnmarhsalBinary(payload []byte) error {
 }
 
 type Err struct {
-	Error   ErrCode
+	Error   OpCode
 	Message string
 }
 
 func (e Err) MarshalBinary() ([]byte, error) {
-	// OpCode + Error Code + Message + 0b
+	// OpCode + ErrorCode + Message + 0b
 	cap := 2 + 2 + len(e.Message) + 1
 
-	b := new(bytes.Buffer)
-	b.Grow(cap)
+	buf := new(bytes.Buffer)
+	buf.Grow(cap)
 
-	if err := binary.Write(b, binary.BigEndian, OpErr); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, OpErr); err != nil {
 		return nil, err
 	}
 
-	if err := binary.Write(b, binary.BigEndian, e.Error); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, e.Error); err != nil {
 		return nil, err
 	}
 
-	if _, err := b.WriteString(e.Message); err != nil {
+	if _, err := buf.WriteString(e.Message); err != nil {
 		return nil, err
 	}
 
-	if err := b.WriteByte(0); err != nil {
+	if err := buf.WriteByte(0); err != nil {
 		return nil, err
 	}
 
-	return b.Bytes(), nil
+	return buf.Bytes(), nil
 }
 
-func (e Err) UnmarhsalBinary(payload []byte) error {
+func (e *Err) UnmarshalBinary(payload []byte) error {
 	reader := bytes.NewBuffer(payload)
 
-	var code OpCode
+	var opCode OpCode
 
-	if err := binary.Read(reader, binary.BigEndian, &code); err != nil {
+	if err := binary.Read(reader, binary.BigEndian, &opCode); err != nil {
 		return err
 	}
-
-	if code != OpErr {
+	if opCode != OpErr {
 		return errors.New("invalid ERROR")
 	}
 
