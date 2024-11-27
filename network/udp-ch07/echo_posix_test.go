@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestEchoServerUnixDatagram(t *testing.T) {
@@ -44,6 +45,8 @@ func TestEchoServerUnixDatagram(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer client.Close()
+
+	client.SetDeadline(time.Now().Add(time.Second))
 
 	if err = os.Chmod(cSocket, os.ModeSocket|0622); err != nil {
 		t.Fatal(err)
