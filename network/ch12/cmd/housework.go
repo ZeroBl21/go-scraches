@@ -9,9 +9,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ZeroBl21/network/ch12/housework"
+	// "github.com/ZeroBl21/network/ch12/housework"
 	// storage "github.com/ZeroBl21/network/ch12/json"
-	storage "github.com/ZeroBl21/network/ch12/gob"
+	// storage "github.com/ZeroBl21/network/ch12/gob"
+
+	"github.com/ZeroBl21/network/ch12/housework/v1"
+	storage "github.com/ZeroBl21/network/ch12/protobuf"
 )
 
 var dataFile string
