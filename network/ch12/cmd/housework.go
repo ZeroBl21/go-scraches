@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/ZeroBl21/network/ch12/housework"
+	storage "github.com/ZeroBl21/network/ch12/json"
 )
 
 var dataFile string
@@ -45,7 +46,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := list; err != nil {
+	if err := list(); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -91,15 +92,16 @@ func list() error {
 
 	if len(chores) == 0 {
 		fmt.Println("You're all caught up")
+		return nil
 	}
 
 	fmt.Println("#\t[X]\tDescription")
 	for i, chore := range chores {
-		c := ""
+		c := " "
 		if chore.Complete {
 			c = "X"
 		}
-		fmt.Println("%d\t[%s]\t%s\n", i+1, c, chore.Description)
+		fmt.Printf("%d\t[%s]\t%s\n", i+1, c, chore.Description)
 	}
 
 	return nil
