@@ -10,7 +10,8 @@ import (
 	"strings"
 
 	"github.com/ZeroBl21/network/ch12/housework"
-	storage "github.com/ZeroBl21/network/ch12/json"
+	// storage "github.com/ZeroBl21/network/ch12/json"
+	storage "github.com/ZeroBl21/network/ch12/gob"
 )
 
 var dataFile string
