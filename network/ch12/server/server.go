@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"sync"
 
 	"github.com/ZeroBl21/network/ch12/housework/v1"
 	"google.golang.org/grpc"
@@ -24,11 +23,7 @@ func main() {
 	flag.Parse()
 
 	server := grpc.NewServer()
-	rosie := &Rosie{
-		mu:                           sync.Mutex{},
-		chores:                       []*housework.Chore{},
-		UnimplementedRobotMaidServer: housework.UnimplementedRobotMaidServer{},
-	}
+	rosie := &Rosie{}
 	housework.RegisterRobotMaidServer(server, rosie)
 
 	cert, err := tls.LoadX509KeyPair(certFn, keyFn)
