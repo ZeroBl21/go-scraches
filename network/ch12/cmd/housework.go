@@ -25,10 +25,11 @@ func init() {
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(),
 			`Usage: %s [flags] [add chore, ...|complete #]
-			add				add comma-separated chores
-			complete	complete designated chore
+  add		add comma-separated chores
+  complete	complete designated chore
 
-			Flags:`, filepath.Base(os.Args[0]),
+Flags:
+`, filepath.Base(os.Args[0]),
 		)
 		flag.PrintDefaults()
 	}
