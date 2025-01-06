@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -43,8 +44,8 @@ func Example_zapJSON() {
 	example.Info("test info message")
 
 	// Output:
-	// {"level":"debug","name":"example","caller":"ch13/zap_test.go:42","msg":"test debug message","version":"go1.23.1"}
-	// {"level":"info","name":"example","caller":"ch13/zap_test.go:43","msg":"test info message","version":"go1.23.1"}
+	// {"level":"debug","name":"example","caller":"ch13/zap_test.go:43","msg":"test debug message","version":"go1.23.1"}
+	// {"level":"info","name":"example","caller":"ch13/zap_test.go:44","msg":"test info message","version":"go1.23.1"}
 }
 
 func Example_zapConsole() {
@@ -111,4 +112,43 @@ func Example_zapInfoFileDebugConsole() {
 	// log file contents:
 	// {"level":"error","msg":"this is logged by the logger"}
 	// {"level":"info","msg":"this is logged as console encoding and JSON"}
+}
+
+func Example_zapSampling() {
+	zl := zap.New(
+		zapcore.NewSamplerWithOptions(
+			zapcore.NewCore(
+				zapcore.NewJSONEncoder(encoderConfig),
+				zapcore.Lock(os.Stdout),
+				zapcore.DebugLevel,
+			),
+			time.Second, 1, 3,
+		),
+	)
+	defer zl.Sync()
+
+	for i := 0; i < 10; i++ {
+		if i == 5 {
+			time.Sleep(time.Second)
+		}
+
+		zl.Debug(fmt.Sprintf("%d", i))
+		zl.Debug("debug message")
+	}
+
+	// Output:
+	// {"level":"debug","msg":"0"}
+	// {"level":"debug","msg":"debug message"}
+	// {"level":"debug","msg":"1"}
+	// {"level":"debug","msg":"2"}
+	// {"level":"debug","msg":"3"}
+	// {"level":"debug","msg":"debug message"}
+	// {"level":"debug","msg":"4"}
+	// {"level":"debug","msg":"5"}
+	// {"level":"debug","msg":"debug message"}
+	// {"level":"debug","msg":"6"}
+	// {"level":"debug","msg":"7"}
+	// {"level":"debug","msg":"8"}
+	// {"level":"debug","msg":"debug message"}
+	// {"level":"debug","msg":"9"}
 }
