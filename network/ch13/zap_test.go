@@ -7,11 +7,13 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"testing"
 	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/fsnotify.v1"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var encoderConfig = zapcore.EncoderConfig{
@@ -242,4 +244,29 @@ func Example_zapDynamicDebugging() {
 	// Output:
 	// {"level":"debug","msg":"this is now at the logger's threshold"}
 	// {"level":"info","msg":"this is at the logger's current threshold"}
+}
+
+func TestZapLogRotation(t *testing.T) {
+	tempDir := os.TempDir()
+	defer os.RemoveAll(tempDir)
+
+	zl := zap.New(
+		zapcore.NewCore(
+			zapcore.NewJSONEncoder(encoderConfig),
+			zapcore.AddSync(
+				&lumberjack.Logger{
+					Filename:   filepath.Join(tempDir, "debug.log"),
+					Compress:   true,
+					LocalTime:  true,
+					MaxAge:     7,
+					MaxBackups: 5,
+					MaxSize:    100,
+				},
+			),
+			zapcore.DebugLevel,
+		),
+	)
+	defer zl.Sync()
+
+	zl.Debug("debug message written to the log file")
 }
