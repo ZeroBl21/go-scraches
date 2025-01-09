@@ -35,7 +35,7 @@ func Example_zapJSON() {
 			zapcore.Lock(os.Stdout),
 			zapcore.DebugLevel,
 		),
-		zap.AddCaller(),
+		zap.WithCaller(false),
 		zap.Fields(
 			zap.String("version", runtime.Version()),
 		),
@@ -47,8 +47,8 @@ func Example_zapJSON() {
 	example.Info("test info message")
 
 	// Output:
-	// {"level":"debug","name":"example","caller":"ch13/zap_test.go:46","msg":"test debug message","version":"go1.23.1"}
-	// {"level":"info","name":"example","caller":"ch13/zap_test.go:47","msg":"test info message","version":"go1.23.1"}
+	// {"level":"debug","name":"example","msg":"test debug message","version":"go1.23.1"}
+	// {"level":"info","name":"example","msg":"test info message","version":"go1.23.1"}
 }
 
 func Example_zapConsole() {
