@@ -17,7 +17,7 @@ var todoFileName = ".todo.json"
 func main() {
 	add := flag.Bool("add", false, "Add task to the to do list")
 	list := flag.Bool("list", false, "List all tasks")
-	complete := flag.Int("complete", 0, "Item to be completedList all tasks")
+	complete := flag.Int("complete", 0, "Item to be completed")
 
 	flag.Parse()
 
