@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
+	"strings"
 
 	todo "github.com/ZeroBl21/cli/ch02"
 )
@@ -12,7 +15,7 @@ import (
 var todoFileName = ".todo.json"
 
 func main() {
-	task := flag.String("task", "", "Task to be included in the To Do list")
+	add := flag.Bool("add", false, "Add task to the to do list")
 	list := flag.Bool("list", false, "List all tasks")
 	complete := flag.Int("complete", 0, "Item to be completedList all tasks")
 
@@ -29,6 +32,17 @@ func main() {
 	}
 
 	switch {
+	case *add:
+		t, err := getTask(os.Stdin, flag.Args()...)
+		if err != nil {
+			log.Fatal(err)
+		}
+		l.Add(t)
+
+		if err := l.Save(todoFileName); err != nil {
+			log.Fatal(err)
+		}
+
 	case *list:
 		fmt.Print(l)
 
@@ -41,14 +55,26 @@ func main() {
 			log.Fatal(err)
 		}
 
-	case *task != "":
-		l.Add(*task)
-
-		if err := l.Save(todoFileName); err != nil {
-			log.Fatal(err)
-		}
-
 	default:
 		flag.PrintDefaults()
 	}
+}
+
+func getTask(r io.Reader, args ...string) (string, error) {
+	if len(args) > 0 {
+		return strings.Join(args, " "), nil
+	}
+
+	s := bufio.NewScanner(r)
+	s.Scan()
+
+	if err := s.Err(); err != nil {
+		return "", err
+	}
+
+	if len(s.Text()) == 0 {
+		return "", fmt.Errorf("Task cannot be blank")
+	}
+
+	return s.Text(), nil
 }
