@@ -7,12 +7,23 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	todo "github.com/ZeroBl21/cli/ch02"
 )
 
 var todoFileName = ".todo.json"
+
+func init() {
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(),
+			"Usage:\n  %s [flag] <input>\n\nExample:\n  %[1]s -add Chore\n\nFlags:\n",
+			filepath.Base(os.Args[0]))
+
+		flag.PrintDefaults()
+	}
+}
 
 func main() {
 	add := flag.Bool("add", false, "Add task to the to do list")
