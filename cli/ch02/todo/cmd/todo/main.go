@@ -4,11 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 
 	todo "github.com/ZeroBl21/cli/ch02"
 )
 
-const todoFileName = ".todo.json"
+var todoFileName = ".todo.json"
 
 func main() {
 	task := flag.String("task", "", "Task to be included in the To Do list")
@@ -16,6 +17,10 @@ func main() {
 	complete := flag.Int("complete", 0, "Item to be completedList all tasks")
 
 	flag.Parse()
+
+	if os.Getenv("TODO_FILENAME") != "" {
+		todoFileName = os.Getenv("TODO_FILENAME")
+	}
 
 	l := &todo.List{}
 
