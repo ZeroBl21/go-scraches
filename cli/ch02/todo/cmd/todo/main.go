@@ -81,7 +81,7 @@ func main() {
 		}
 
 	default:
-		flag.PrintDefaults()
+		flag.Usage()
 	}
 }
 
