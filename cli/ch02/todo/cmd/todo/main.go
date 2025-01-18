@@ -28,6 +28,7 @@ func init() {
 func main() {
 	add := flag.Bool("add", false, "Add task to the to do list")
 	list := flag.Bool("list", false, "List all tasks")
+	pending := flag.Bool("pending", false, "List all pending tasks")
 	complete := flag.Int("complete", 0, "Item to be completed")
 	delete := flag.Int("del", 0, "Item to be deleted")
 
@@ -57,6 +58,9 @@ func main() {
 
 	case *list:
 		fmt.Print(l)
+
+	case *pending:
+		fmt.Print(l.Pending())
 
 	case *complete > 0:
 		if err := l.Complete(*complete); err != nil {

@@ -92,3 +92,22 @@ func (l *List) String() string {
 
 	return formatted
 }
+
+func (l *List) Pending() string {
+	formatted := ""
+
+	for idx, task := range *l {
+		if !task.CompletedAt.IsZero() {
+			continue
+		}
+
+		prefix := "[ ] "
+		if task.Done {
+			prefix = "[X] "
+		}
+
+		formatted += fmt.Sprintf("%s%d: %s\n", prefix, idx+1, task.Task)
+	}
+
+	return formatted
+}
