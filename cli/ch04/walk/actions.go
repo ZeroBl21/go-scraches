@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"os"
 	"path/filepath"
 )
 
@@ -22,4 +23,8 @@ func filterOut(path, ext string, minSize int64, info fs.FileInfo) bool {
 func listFile(path string, out io.Writer) error {
 	_, err := fmt.Fprintln(out, path)
 	return err
+}
+
+func deleteFile(path string) error {
+	return os.Remove(path)
 }
