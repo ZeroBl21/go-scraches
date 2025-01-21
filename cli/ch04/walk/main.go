@@ -14,12 +14,15 @@ type config struct {
 	size   int64
 	list   bool
 	delete bool
+
+	wLog io.Writer
 }
 
 func main() {
 	c := config{}
 
 	root := flag.String("root", ".", "Root directory to start")
+	logFile := flag.String("log", "", "Log deletes to this file")
 
 	flag.BoolVar(&c.list, "list", false, "List files only")
 	flag.BoolVar(&c.delete, "del", false, "Delete files")
@@ -28,12 +31,24 @@ func main() {
 
 	flag.Parse()
 
+	f := os.Stdout
+	if *logFile != "" {
+		f, err := os.OpenFile(*logFile, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+	}
+	c.wLog = f
+
 	if err := run(*root, os.Stdout, c); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func run(root string, out io.Writer, cfg config) error {
+	deleteLogger := log.New(cfg.wLog, "DELETED FILE: ", log.LstdFlags)
+
 	return filepath.Walk(root, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -48,7 +63,7 @@ func run(root string, out io.Writer, cfg config) error {
 		}
 
 		if cfg.delete {
-			return deleteFile(path)
+			return deleteFile(path, deleteLogger)
 		}
 
 		return listFile(path, out)
