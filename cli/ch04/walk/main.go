@@ -34,9 +34,12 @@ func main() {
 
 	flag.Parse()
 
-	f := os.Stdout
+	var (
+		f   = os.Stdout
+		err error
+	)
 	if *logFile != "" {
-		f, err := os.OpenFile(*logFile, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
+		f, err = os.OpenFile(*logFile, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
 		if err != nil {
 			log.Fatal(err)
 		}
