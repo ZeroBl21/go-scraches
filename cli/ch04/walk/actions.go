@@ -1,6 +1,7 @@
 package main
 
 import (
+	"compress/gzip"
 	"fmt"
 	"io"
 	"io/fs"
@@ -33,4 +34,52 @@ func deleteFile(path string, deleteLogger *log.Logger) error {
 
 	deleteLogger.Println(path)
 	return nil
+}
+
+func archiveFile(destDir, root, path string) error {
+	info, err := os.Stat(destDir)
+	if err != nil {
+		return err
+	}
+
+	if !info.IsDir() {
+		return fmt.Errorf("%s is not a directory", destDir)
+	}
+
+	relativeDir, err := filepath.Rel(root, filepath.Dir(path))
+	if err != nil {
+		return err
+	}
+
+	dest := fmt.Sprintf("%s.gz", filepath.Base(path))
+	targetPath := filepath.Join(destDir, relativeDir, dest)
+
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+		return err
+	}
+
+	out, err := os.OpenFile(targetPath, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	in, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	zw := gzip.NewWriter(out)
+	zw.Name = filepath.Base(path)
+
+	if _, err := io.Copy(zw, in); err != nil {
+		return err
+	}
+
+	if err := zw.Close(); err != nil {
+		return err
+	}
+
+	return out.Close()
 }
