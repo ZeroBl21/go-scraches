@@ -8,14 +8,19 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
-func filterOut(path, ext string, minSize int64, info fs.FileInfo) bool {
+func filterOut(path, ext, name string, minSize int64, info fs.FileInfo) bool {
 	if info.IsDir() || info.Size() < minSize {
 		return true
 	}
 
 	if ext != "" && filepath.Ext(path) != ext {
+		return true
+	}
+
+	if name != "" && !strings.Contains(info.Name(), name) {
 		return true
 	}
 

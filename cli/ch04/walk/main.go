@@ -10,6 +10,7 @@ import (
 )
 
 type config struct {
+	name   string
 	ext    string
 	size   int64
 	list   bool
@@ -26,6 +27,7 @@ func main() {
 	logFile := flag.String("log", "", "Log deletes to this file")
 
 	flag.StringVar(&c.archive, "archive", "", "Archive directory")
+	flag.StringVar(&c.name, "name", "", "File name to filter out")
 	flag.StringVar(&c.ext, "ext", "", "File extension to filter out")
 	flag.Int64Var(&c.size, "size", 0, "Minimum file size")
 
@@ -60,7 +62,7 @@ func run(root string, out io.Writer, cfg config) error {
 			return err
 		}
 
-		if filterOut(path, cfg.ext, cfg.size, info) {
+		if filterOut(path, cfg.ext, cfg.name, cfg.size, info) {
 			return nil
 		}
 
