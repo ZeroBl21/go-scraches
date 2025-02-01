@@ -24,6 +24,7 @@ func TestOperations(t *testing.T) {
 	}{
 		{"Sum", sum, []float64{300, 85.927, -30, 436}},
 		{"Avg", avg, []float64{37.5, 6.609769230769231, -15, 72.666666666666666}},
+		{"Min", min, []float64{10, 2.2, -20, 37}},
 	}
 
 	for _, tc := range testCases {

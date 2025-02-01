@@ -59,3 +59,15 @@ func sum(data []float64) float64 {
 func avg(data []float64) float64 {
 	return sum(data) / float64(len(data))
 }
+
+func min(data []float64) float64 {
+	min := 0.0
+
+	for i, v := range data {
+		if i == 0 || v < min {
+			min = v
+		}
+	}
+
+	return min
+}
