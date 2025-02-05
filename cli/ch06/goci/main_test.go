@@ -19,13 +19,14 @@ func TestRun(t *testing.T) {
 	testCases := []struct {
 		name     string
 		proj     string
+		branch   string
 		out      string
 		expErr   error
 		setupGit bool
 		mockCmd  func(ctx context.Context, name string, args ...string) *exec.Cmd
 	}{
 		{
-			name: "success", proj: "./testdata/tool/",
+			name: "success", proj: "./testdata/tool/", branch: "main",
 			out: "Go Build: SUCCESS\n" +
 				"Go Test: SUCCESS\n" +
 				"Gofmt: SUCCESS\n" +
@@ -33,7 +34,7 @@ func TestRun(t *testing.T) {
 			expErr: nil, setupGit: true, mockCmd: nil,
 		},
 		{
-			name: "successMock", proj: "./testdata/tool/",
+			name: "successMock", proj: "./testdata/tool/", branch: "main",
 			out: "Go Build: SUCCESS\n" +
 				"Go Test: SUCCESS\n" +
 				"Gofmt: SUCCESS\n" +
@@ -41,17 +42,25 @@ func TestRun(t *testing.T) {
 			expErr: nil, setupGit: false, mockCmd: mockCmdContext,
 		},
 		{
-			name: "fail", proj: "./testdata/toolErr/",
+			name: "successMaster", proj: "./testdata/tool/", branch: "master",
+			out: "Go Build: SUCCESS\n" +
+				"Go Test: SUCCESS\n" +
+				"Gofmt: SUCCESS\n" +
+				"Git Push: SUCCESS\n",
+			expErr: nil, setupGit: false, mockCmd: mockCmdContext,
+		},
+		{
+			name: "fail", proj: "./testdata/toolErr/", branch: "main",
 			out: "", expErr: &stepErr{step: "go build"},
 			setupGit: false,
 		},
 		{
-			name: "failFormat", proj: "./testdata/toolFmtErr",
+			name: "failFormat", proj: "./testdata/toolFmtErr", branch: "main",
 			out: "", expErr: &stepErr{step: "go fmt"},
 			setupGit: false,
 		},
 		{
-			name: "failTimeout", proj: "./testdata/tool",
+			name: "failTimeout", proj: "./testdata/tool", branch: "main",
 			out: "", expErr: context.DeadlineExceeded,
 			setupGit: false, mockCmd: mockCmdTimeout,
 		},
@@ -75,7 +84,7 @@ func TestRun(t *testing.T) {
 
 			var out bytes.Buffer
 
-			err := run(tc.proj, &out)
+			err := run(tc.proj, tc.branch, &out)
 
 			if tc.expErr != nil {
 				if err == nil {
@@ -122,12 +131,13 @@ func TestRunKill(t *testing.T) {
 	testCases := []struct {
 		name   string
 		proj   string
+		branch string
 		sig    syscall.Signal
 		expErr error
 	}{
-		{"SIGINT", "./testdata/tool", syscall.SIGINT, ErrSignal},
-		{"SIGTERM", "./testdata/tool", syscall.SIGTERM, ErrSignal},
-		{"SIGQUIT", "./testdata/tool", syscall.SIGQUIT, nil},
+		{"SIGINT", "./testdata/tool", "main", syscall.SIGINT, ErrSignal},
+		{"SIGTERM", "./testdata/tool", "main", syscall.SIGTERM, ErrSignal},
+		{"SIGQUIT", "./testdata/tool", "main", syscall.SIGQUIT, nil},
 	}
 
 	for _, tc := range testCases {
@@ -145,7 +155,7 @@ func TestRunKill(t *testing.T) {
 			defer signal.Stop(expSigCh)
 
 			go func() {
-				errCh <- run(tc.proj, io.Discard)
+				errCh <- run(tc.proj, tc.branch, io.Discard)
 			}()
 
 			go func() {

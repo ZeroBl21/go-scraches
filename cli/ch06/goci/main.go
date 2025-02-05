@@ -13,10 +13,11 @@ import (
 
 func main() {
 	proj := flag.String("p", "", "Project directory")
+	branch := flag.String("b", "main", "Git branch to push the code")
 
 	flag.Parse()
 
-	if err := run(*proj, os.Stdout); err != nil {
+	if err := run(*proj, *branch, os.Stdout); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -25,9 +26,13 @@ type executer interface {
 	execute() (string, error)
 }
 
-func run(proj string, out io.Writer) error {
+func run(proj, branch string, out io.Writer) error {
 	if proj == "" {
 		return fmt.Errorf("Project directory is required: %w", ErrValidation)
+	}
+
+	if branch == "" {
+		return fmt.Errorf("Git branch is required: %w", ErrValidation)
 	}
 
 	pipeline := make([]executer, 4)
@@ -61,7 +66,7 @@ func run(proj string, out io.Writer) error {
 		"git",
 		"Git Push: SUCCESS",
 		proj,
-		[]string{"push", "origin", "main"},
+		[]string{"push", "origin", branch},
 		10*time.Second,
 	)
 
