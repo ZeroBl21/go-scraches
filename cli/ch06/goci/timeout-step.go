@@ -11,6 +11,8 @@ type timeoutStep struct {
 	timeout time.Duration
 }
 
+var command = exec.CommandContext
+
 func newTimeoutStep(
 	name, exe, msg, proj string,
 	args []string,
@@ -32,7 +34,7 @@ func (s timeoutStep) execute() (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, s.exe, s.args...)
+	cmd := command(ctx, s.exe, s.args...)
 	cmd.Dir = s.proj
 
 	if err := cmd.Run(); err != nil {
