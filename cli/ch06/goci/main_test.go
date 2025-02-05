@@ -123,11 +123,7 @@ func setupGit(t *testing.T, proj string) func() {
 		t.Fatal(err)
 	}
 
-	// tempDir := t.TempDir()
-	tempDir, err := os.MkdirTemp("", "gocitest")
-	if err != nil {
-		t.Fatal(err)
-	}
+	tempDir := t.TempDir()
 
 	projPath, err := filepath.Abs(proj)
 	if err != nil {
