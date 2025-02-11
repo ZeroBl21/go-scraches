@@ -90,18 +90,15 @@ func TestIntegration(t *testing.T) {
 	// add -> list -> delete -> list -> scan
 
 	for _, v := range hosts {
-		expectedOut.WriteString(fmt.Sprintf("Added host: %s\n", v))
+		fmt.Fprintf(&expectedOut, "Added host: %s\n", v)
 	}
 
-	expectedOut.WriteString(strings.Join(hosts, "\n"))
-	expectedOut.WriteString("\n")
-	expectedOut.WriteString(fmt.Sprintf("Deleted host: %s\n", delHost))
-	expectedOut.WriteString(strings.Join(hostsEnd, "\n"))
-	expectedOut.WriteString("\n")
+	expectedOut.WriteString(strings.Join(hosts, "\n") + "\n")
+	fmt.Fprintf(&expectedOut, "Deleted host: %s\n", delHost)
+	expectedOut.WriteString(strings.Join(hostsEnd, "\n") + "\n")
 
 	for _, v := range hostsEnd {
-		expectedOut.WriteString(fmt.Sprintf("%s: Host not found\n", v))
-		expectedOut.WriteString("\n")
+		fmt.Fprintf(&expectedOut, "%s: Host not found\n\n", v)
 	}
 
 	if err := addAction(&out, tf, hosts); err != nil {
