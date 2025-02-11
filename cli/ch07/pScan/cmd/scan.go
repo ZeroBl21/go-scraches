@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/ZeroBl21/cli/ch07/pScan/scan"
 	"github.com/spf13/cobra"
@@ -62,26 +63,25 @@ func scanAction(out io.Writer, hostsFile string, ports []int) error {
 }
 
 func printResults(out io.Writer, results []scan.Results) error {
-	msg := ""
+	var sb strings.Builder
 
 	for _, r := range results {
-		msg += fmt.Sprintf("%s:", r.Host)
+		fmt.Fprintf(&sb, "%s:", r.Host)
 
 		if r.NotFound {
-			msg += fmt.Sprintf(" Host not found\n\n")
+			fmt.Fprintf(&sb, " Host not found\n\n")
 			continue
 		}
 
-		msg += fmt.Sprintln()
+		fmt.Fprintln(&sb)
 
 		for _, p := range r.PortStates {
-			msg += fmt.Sprintf("\t%d: %s\n", p.Port, p.Open)
+			fmt.Fprintf(&sb, "\t%d: %s\n", p.Port, p.Open)
 		}
 
-		msg += fmt.Sprintln()
+		fmt.Fprintln(&sb)
 	}
 
-	_, err := fmt.Fprint(out, msg)
-
+	_, err := out.Write([]byte(sb.String()))
 	return err
 }
