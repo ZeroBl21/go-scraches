@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"net"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -83,17 +85,24 @@ func TestIntegration(t *testing.T) {
 	}
 
 	var out bytes.Buffer
-	var expectedOut string
+	var expectedOut strings.Builder
 
-	// add -> list -> delete -> list
+	// add -> list -> delete -> list -> scan
+
 	for _, v := range hosts {
-		expectedOut += fmt.Sprintf("Added host: %s\n", v)
+		expectedOut.WriteString(fmt.Sprintf("Added host: %s\n", v))
 	}
-	expectedOut += strings.Join(hosts, "\n")
-	expectedOut += fmt.Sprintln()
-	expectedOut += fmt.Sprintf("Deleted host: %s\n", delHost)
-	expectedOut += strings.Join(hostsEnd, "\n")
-	expectedOut += fmt.Sprintln()
+
+	expectedOut.WriteString(strings.Join(hosts, "\n"))
+	expectedOut.WriteString("\n")
+	expectedOut.WriteString(fmt.Sprintf("Deleted host: %s\n", delHost))
+	expectedOut.WriteString(strings.Join(hostsEnd, "\n"))
+	expectedOut.WriteString("\n")
+
+	for _, v := range hostsEnd {
+		expectedOut.WriteString(fmt.Sprintf("%s: Host not found\n", v))
+		expectedOut.WriteString("\n")
+	}
 
 	if err := addAction(&out, tf, hosts); err != nil {
 		t.Fatalf("Expected no error, got %q\n", err)
@@ -111,8 +120,12 @@ func TestIntegration(t *testing.T) {
 		t.Fatalf("Expected no error, got %q\n", err)
 	}
 
-	if out.String() != expectedOut {
-		t.Errorf("Expected output %q, got %q\n", expectedOut, out.String())
+	if err := scanAction(&out, tf, nil); err != nil {
+		t.Fatalf("Expected no error, got %q\n", err)
+	}
+
+	if out.String() != expectedOut.String() {
+		t.Errorf("Expected output %q, got %q\n", expectedOut.String(), out.String())
 	}
 }
 
@@ -137,5 +150,60 @@ func setup(t *testing.T, hosts []string, initList bool) (string, func()) {
 
 	return tf.Name(), func() {
 		os.Remove(tf.Name())
+	}
+}
+
+func TestScanAction(t *testing.T) {
+	hosts := []string{
+		"localhost",
+		"unknownhostoutthere",
+	}
+
+	tf, cleanup := setup(t, hosts, true)
+	defer cleanup()
+
+	ports := []int{}
+
+	for i := 0; i < len(hosts); i++ {
+		ln, err := net.Listen("tcp", net.JoinHostPort("localhost", "0"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer ln.Close()
+
+		_, portStr, err := net.SplitHostPort(ln.Addr().String())
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		port, err := strconv.Atoi(portStr)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		ports = append(ports, port)
+
+		// If host is "unknownhostoutthere" close listener
+		if i == 1 {
+			ln.Close()
+		}
+	}
+
+	var expectedOut strings.Builder
+
+	expectedOut.WriteString("localhost:\n")
+	expectedOut.WriteString(fmt.Sprintf("\t%d: open\n", ports[0]))
+	expectedOut.WriteString(fmt.Sprintf("\t%d: closed\n", ports[1]))
+	expectedOut.WriteString("\n")
+	expectedOut.WriteString(fmt.Sprintf("%s: Host not found\n\n", hosts[1]))
+
+	var out bytes.Buffer
+
+	if err := scanAction(&out, tf, ports); err != nil {
+		t.Fatalf("Expected no error, got %q\n", err)
+	}
+
+	if out.String() != expectedOut.String() {
+		t.Errorf("Expected output %q, got %q\n", &expectedOut, out.String())
 	}
 }
