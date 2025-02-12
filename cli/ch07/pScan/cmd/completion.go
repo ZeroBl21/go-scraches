@@ -20,6 +20,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -28,44 +29,104 @@ import (
 var completionCmd = &cobra.Command{
 	Use:   "completion",
 	Short: "Generate bash completion for your command",
-	Long: `To load your completions run
+	Long: `To load your completions run:
 source <(pScan completion)
 
-To load completions automatically on login, add this line to your
-.bashrc file:
-$ ~/.bashrc source <(pScan completion)
+To load completions automatically on login, add this line to your shell config:
+- Bash:   echo 'source <(pScan completion --bash)' >> ~/.bashrc
+- Zsh:    echo 'source <(pScan completion --zsh)' >> ~/.zshrc
+- Fish:   pScan completion --fish | source ~/.config/fish/config.fis
+- PowerShell:  pScan completion --powershell | Out-File -Append $PROFILE
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return completionAction(os.Stdout)
+		shells := map[string]bool{
+			"bash":       false,
+			"zsh":        false,
+			"fish":       false,
+			"powershell": false,
+		}
+
+		for shell := range shells {
+			value, err := cmd.Flags().GetBool(shell)
+			if err != nil {
+				return err
+			}
+			shells[shell] = value
+		}
+
+		var shell string
+		for s, enabled := range shells {
+			if enabled {
+				shell = s
+				break
+			}
+		}
+
+		if shell == "" {
+			var err error
+			shell, err = getShell()
+			if err != nil {
+				return err
+			}
+		}
+
+		return completionAction(os.Stdout, shell)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(completionCmd)
+
+	rootCmd.Flags().BoolP("bash", "b", false, "bash shell")
+	rootCmd.Flags().BoolP("zsh", "z", false, "zsh shell")
+	rootCmd.Flags().BoolP("fish", "f", false, "fish shell")
+	rootCmd.Flags().BoolP("powershell", "ps", false, "powershell shell")
 }
 
-func completionAction(out io.Writer) error {
+func getShell() (string, error) {
 	var shell string
 
 	if runtime.GOOS == "windows" {
-		shell = os.Getenv("ComSpec") // Normalmente "C:\Windows\System32\cmd.exe" o la ruta de PowerShell
-	} else {
-		shell = os.Getenv("SHELL") // Ejemplo: "/bin/bash", "/usr/bin/fish", "/bin/zsh"
+		if strings.Contains(strings.ToLower(os.Getenv("TERM_PROGRAM")), "powershell") {
+			return "powershell", nil
+		}
+		if strings.Contains(strings.ToLower(os.Getenv("ComSpec")), "cmd.exe") {
+			return "cmd", nil
+		}
+		return "", fmt.Errorf("unsupported shell on Windows")
 	}
 
+	shell = os.Getenv("SHELL")
+
 	if shell == "" {
-		return fmt.Errorf("unknown terminal")
+		return "", fmt.Errorf("unknown shell")
 	}
 
 	switch shell {
 	case "/bin/bash":
-		return rootCmd.GenBashCompletion(out)
-	case "/usr/bin/fish":
-		return rootCmd.GenFishCompletion(out, false)
+		return "bash", nil
 	case "/bin/zsh":
-		return rootCmd.GenZshCompletion(out)
-
+		return "zsh", nil
+	case "/usr/bin/fish":
+		return "fish", nil
 	default:
-		return fmt.Errorf("unsupported terminal")
+		return "", fmt.Errorf("unsupported shell")
+	}
+}
+
+func completionAction(out io.Writer, shell string) error {
+	switch shell {
+	case "bash":
+		return rootCmd.GenBashCompletion(out)
+	case "fish":
+		return rootCmd.GenZshCompletion(out)
+	case "zsh":
+		return rootCmd.GenFishCompletion(out, false)
+	case "powershell":
+		return rootCmd.GenPowerShellCompletion(out)
+	case "cmd":
+		return fmt.Errorf("command-line completion is not supported in cmd.exe")
+	default:
+		return fmt.Errorf("unknown shell: %s", shell)
 	}
 }
