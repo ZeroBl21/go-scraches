@@ -38,6 +38,10 @@ var scanCmd = &cobra.Command{
 			return err
 		}
 
+		if err := validatePorts(ports); err != nil {
+			return err
+		}
+
 		return scanAction(os.Stdout, hostsFile, ports)
 	},
 }
@@ -58,6 +62,16 @@ func scanAction(out io.Writer, hostsFile string, ports []int) error {
 	results := scan.Run(hl, ports)
 
 	return printResults(out, results)
+}
+
+func validatePorts(ports []int) error {
+	for _, p := range ports {
+		if p < 1 && p > 65_535 {
+			return fmt.Errorf("Invalid TCP port %d to scan", p)
+		}
+	}
+
+	return nil
 }
 
 func printResults(out io.Writer, results []scan.Results) error {
