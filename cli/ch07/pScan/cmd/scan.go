@@ -20,6 +20,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/ZeroBl21/cli/ch07/pScan/scan"
 	"github.com/spf13/cobra"
@@ -38,11 +39,19 @@ var scanCmd = &cobra.Command{
 			return err
 		}
 
+		timeout, err := cmd.Flags().GetDuration("timeout")
+		if err != nil {
+			return err
+		}
+		if timeout == 0 {
+			return fmt.Errorf("timeout need to be greater than zero")
+		}
+
 		if err := validatePorts(ports); err != nil {
 			return err
 		}
 
-		return scanAction(os.Stdout, hostsFile, ports)
+		return scanAction(os.Stdout, hostsFile, ports, timeout)
 	},
 }
 
@@ -50,16 +59,17 @@ func init() {
 	rootCmd.AddCommand(scanCmd)
 
 	scanCmd.Flags().IntSliceP("ports", "p", []int{22, 80, 443}, "ports to scan")
+	scanCmd.Flags().DurationP("timeout", "t", 1000, "time on milliseconds timeout port scanning")
 }
 
-func scanAction(out io.Writer, hostsFile string, ports []int) error {
+func scanAction(out io.Writer, hostsFile string, ports []int, timeout time.Duration) error {
 	hl := &scan.HostsList{}
 
 	if err := hl.Load(hostsFile); err != nil {
 		return err
 	}
 
-	results := scan.Run(hl, ports)
+	results := scan.Run(hl, ports, timeout)
 
 	return printResults(out, results)
 }

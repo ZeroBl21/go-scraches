@@ -4,6 +4,7 @@ import (
 	"net"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/ZeroBl21/cli/ch07/pScan/scan"
 )
@@ -37,6 +38,7 @@ func TestRunHostFound(t *testing.T) {
 	hl.Add(host)
 
 	ports := []int{}
+	timeout := time.Duration(1000)
 
 	for _, tc := range testCases {
 		ln, err := net.Listen("tcp", net.JoinHostPort(host, "0"))
@@ -62,7 +64,7 @@ func TestRunHostFound(t *testing.T) {
 		}
 	}
 
-	res := scan.Run(hl, ports)
+	res := scan.Run(hl, ports, timeout)
 
 	if len(res) != 1 {
 		t.Fatalf("Expected 1 results, got %d instead\n", len(res))
@@ -94,11 +96,12 @@ func TestRunHostFound(t *testing.T) {
 
 func TestRunHostNotFound(t *testing.T) {
 	host := "389.389.389.389"
+	timeout := time.Duration(1000)
 
 	hl := &scan.HostsList{}
 	hl.Add(host)
 
-	res := scan.Run(hl, []int{})
+	res := scan.Run(hl, []int{}, timeout)
 
 	if len(res) != 1 {
 		t.Fatalf("Expected 1 results, got %d instead\n", len(res))

@@ -30,13 +30,13 @@ func (s state) String() string {
 }
 
 // scanPort performs a port scan on  a single TCP port
-func scanPort(host string, port int) PortState {
+func scanPort(host string, port int, timeout time.Duration) PortState {
 	p := PortState{
 		Port: port,
 	}
 
 	addr := net.JoinHostPort(host, fmt.Sprintf("%d", port))
-	scanConn, err := net.DialTimeout("tcp", addr, 1*time.Second)
+	scanConn, err := net.DialTimeout("tcp", addr, timeout*time.Millisecond)
 	if err != nil {
 		return p
 	}
@@ -54,7 +54,7 @@ type Results struct {
 }
 
 // Run performs a port scan on the hosts list
-func Run(hl *HostsList, ports []int) []Results {
+func Run(hl *HostsList, ports []int, timeout time.Duration) []Results {
 	res := make([]Results, 0, len(hl.Hosts))
 	for _, h := range hl.Hosts {
 		r := Results{
@@ -68,7 +68,7 @@ func Run(hl *HostsList, ports []int) []Results {
 		}
 
 		for _, p := range ports {
-			r.PortStates = append(r.PortStates, scanPort(h, p))
+			r.PortStates = append(r.PortStates, scanPort(h, p, timeout))
 		}
 
 		res = append(res, r)

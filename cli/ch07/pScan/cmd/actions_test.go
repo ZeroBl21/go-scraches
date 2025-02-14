@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ZeroBl21/cli/ch07/pScan/scan"
 )
@@ -117,7 +118,7 @@ func TestIntegration(t *testing.T) {
 		t.Fatalf("Expected no error, got %q\n", err)
 	}
 
-	if err := scanAction(&out, tf, nil); err != nil {
+	if err := scanAction(&out, tf, nil, time.Duration(1000)); err != nil {
 		t.Fatalf("Expected no error, got %q\n", err)
 	}
 
@@ -160,6 +161,7 @@ func TestScanAction(t *testing.T) {
 	defer cleanup()
 
 	ports := []int{}
+	timeout := time.Duration(1000)
 
 	for i := 0; i < len(hosts); i++ {
 		ln, err := net.Listen("tcp", net.JoinHostPort("localhost", "0"))
@@ -196,7 +198,7 @@ func TestScanAction(t *testing.T) {
 
 	var out bytes.Buffer
 
-	if err := scanAction(&out, tf, ports); err != nil {
+	if err := scanAction(&out, tf, ports, timeout); err != nil {
 		t.Fatalf("Expected no error, got %q\n", err)
 	}
 
