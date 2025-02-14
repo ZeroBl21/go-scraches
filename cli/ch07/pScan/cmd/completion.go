@@ -80,7 +80,7 @@ func init() {
 	rootCmd.Flags().BoolP("bash", "b", false, "bash shell")
 	rootCmd.Flags().BoolP("zsh", "z", false, "zsh shell")
 	rootCmd.Flags().BoolP("fish", "f", false, "fish shell")
-	rootCmd.Flags().BoolP("powershell", "ps", false, "powershell shell")
+	rootCmd.Flags().BoolP("powershell", "p", false, "powershell shell")
 }
 
 func getShell() (string, error) {
