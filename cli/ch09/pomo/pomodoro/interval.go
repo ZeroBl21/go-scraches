@@ -38,6 +38,37 @@ type Repository interface {
 	Breaks(n int) ([]Interval, error)
 }
 
+func nextCategory(r Repository) (string, error) {
+	li, err := r.Last()
+	if err != nil && err == ErrNoInterval {
+		return CategoryPomodoro, nil
+	}
+	if err != nil {
+		return "", err
+	}
+
+	if li.Category == CategoryLongBreak || li.Category == CategoryShortBreak {
+		return CategoryPomodoro, nil
+	}
+
+	lastBreaks, err := r.Breaks(3)
+	if err != nil {
+		return "", err
+	}
+
+	if len(lastBreaks) < 3 {
+		return CategoryShortBreak, nil
+	}
+
+	for _, i := range lastBreaks {
+		if i.Category == CategoryLongBreak {
+			return CategoryShortBreak, nil
+		}
+	}
+
+	return CategoryLongBreak, nil
+}
+
 type Interval struct {
 	ID              int64
 	StartTime       time.Time
@@ -126,71 +157,6 @@ func (i Interval) Pause(config *IntervalConfig) error {
 	return config.repo.Update(i)
 }
 
-type IntervalConfig struct {
-	repo Repository
-
-	PomodoroDuration   time.Duration
-	ShortBreakDuration time.Duration
-	LongBreakDuration  time.Duration
-}
-
-func NewConfig(
-	repo Repository,
-	pomodoro, shortBreak, longBreak time.Duration,
-) *IntervalConfig {
-	cfg := &IntervalConfig{
-		repo:               repo,
-		PomodoroDuration:   25 * time.Minute,
-		ShortBreakDuration: 5 * time.Minute,
-		LongBreakDuration:  15 * time.Minute,
-	}
-
-	if pomodoro > 0 {
-		cfg.PomodoroDuration = pomodoro
-	}
-
-	if shortBreak > 0 {
-		cfg.ShortBreakDuration = shortBreak
-	}
-
-	if longBreak > 0 {
-		cfg.LongBreakDuration = longBreak
-	}
-
-	return cfg
-}
-
-func nextCategory(r Repository) (string, error) {
-	li, err := r.Last()
-	if err != nil && err == ErrNoInterval {
-		return CategoryPomodoro, nil
-	}
-	if err != nil {
-		return "", err
-	}
-
-	if li.Category == CategoryLongBreak || li.Category == CategoryShortBreak {
-		return CategoryPomodoro, nil
-	}
-
-	lastBreaks, err := r.Breaks(3)
-	if err != nil {
-		return "", err
-	}
-
-	if len(lastBreaks) < 3 {
-		return CategoryShortBreak, nil
-	}
-
-	for _, i := range lastBreaks {
-		if i.Category == CategoryLongBreak {
-			return CategoryShortBreak, nil
-		}
-	}
-
-	return CategoryLongBreak, nil
-}
-
 type Callback func(Interval)
 
 func tick(
@@ -251,4 +217,38 @@ func tick(
 			return config.repo.Update(i)
 		}
 	}
+}
+
+type IntervalConfig struct {
+	repo Repository
+
+	PomodoroDuration   time.Duration
+	ShortBreakDuration time.Duration
+	LongBreakDuration  time.Duration
+}
+
+func NewConfig(
+	repo Repository,
+	pomodoro, shortBreak, longBreak time.Duration,
+) *IntervalConfig {
+	cfg := &IntervalConfig{
+		repo:               repo,
+		PomodoroDuration:   25 * time.Minute,
+		ShortBreakDuration: 5 * time.Minute,
+		LongBreakDuration:  15 * time.Minute,
+	}
+
+	if pomodoro > 0 {
+		cfg.PomodoroDuration = pomodoro
+	}
+
+	if shortBreak > 0 {
+		cfg.ShortBreakDuration = shortBreak
+	}
+
+	if longBreak > 0 {
+		cfg.LongBreakDuration = longBreak
+	}
+
+	return cfg
 }
