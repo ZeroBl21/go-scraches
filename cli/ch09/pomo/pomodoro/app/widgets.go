@@ -29,22 +29,24 @@ func newWidgets(ctx context.Context, errorCh chan<- error) (*widgets, error) {
 		updateTxtType:  make(chan string),
 	}
 
-	w.donTimer, err := newDonut(ctx, w.updateDonTimer, errorCh)
+	var err error
+
+	w.donTimer, err = newDonut(ctx, w.updateDonTimer, errorCh)
 	if err != nil {
 		return nil, err
 	}
 
-	w.displayType, err := newSegmentDisplay(ctx, w.updateTxtType, errorCh)
+	w.displayType, err = newSegmentDisplay(ctx, w.updateTxtType, errorCh)
 	if err != nil {
 		return nil, err
 	}
 
-	w.txtInfo, err := newText(ctx, w.updateTxtInfo, errorCh)
+	w.txtInfo, err = newText(ctx, w.updateTxtInfo, errorCh)
 	if err != nil {
 		return nil, err
 	}
 
-	w.txtTimer, err := newText(ctx, w.updateTxtTimer, errorCh)
+	w.txtTimer, err = newText(ctx, w.updateTxtTimer, errorCh)
 	if err != nil {
 		return nil, err
 	}
@@ -159,4 +161,6 @@ func newSegmentDisplay(
 			}
 		}
 	}()
+
+	return sd, nil
 }
