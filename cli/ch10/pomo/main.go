@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "github.com/ZeroBl21/cli/ch09/pomo/cmd"
+import "github.com/ZeroBl21/cli/ch10/pomo/cmd"
 
 func main() {
 	cmd.Execute()

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/ZeroBl21/cli/ch09/pomo/pomodoro"
+	"github.com/ZeroBl21/cli/ch10/pomo/pomodoro"
 )
 
 type inMemoryRepo struct {
