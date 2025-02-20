@@ -1,3 +1,6 @@
+//go:build inmemory
+// +build inmemory
+
 package pomodoro_test
 
 import (
