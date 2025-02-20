@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"strings"
 
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/widgets/donut"
@@ -67,7 +68,7 @@ func (w *widgets) update(
 		w.updateTxtType <- txtType
 	}
 
-	if txtInfo != "" {
+	if txtTimer != "" {
 		w.updateTxtTimer <- txtTimer
 	}
 
@@ -153,7 +154,7 @@ func newSegmentDisplay(
 				}
 
 				errCh <- sd.Write([]*segmentdisplay.TextChunk{
-					segmentdisplay.NewChunk(t),
+					segmentdisplay.NewChunk(strings.ToUpper(t)),
 				})
 
 			case <-ctx.Done():

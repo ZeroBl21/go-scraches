@@ -166,6 +166,7 @@ func tick(
 	start, periodic, end Callback,
 ) error {
 	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
 
 	i, err := config.repo.ByID(id)
 	if err != nil {

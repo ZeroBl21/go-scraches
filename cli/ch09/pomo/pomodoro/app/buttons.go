@@ -25,7 +25,7 @@ func newButtonSet(
 		i, err := pomodoro.GetInterval(config)
 		errCh <- err
 
-		start := func(pomodoro.Interval) {
+		start := func(i pomodoro.Interval) {
 			msg := "Take a break"
 			if i.Category == pomodoro.CategoryPomodoro {
 				msg = "Focus on your task"
@@ -34,13 +34,13 @@ func newButtonSet(
 			w.update([]int{}, i.Category, msg, "", redrawCh)
 		}
 
-		periodic := func(pomodoro.Interval) {
+		periodic := func(i pomodoro.Interval) {
 			w.update(
 				[]int{int(i.ActualDuration), int(i.PlannedDuration)},
 				"", "", fmt.Sprint(i.PlannedDuration-i.ActualDuration), redrawCh)
 		}
 
-		end := func(pomodoro.Interval) {
+		end := func(i pomodoro.Interval) {
 			w.update([]int{}, "", "Nothing running...", "", redrawCh)
 		}
 
@@ -77,7 +77,7 @@ func newButtonSet(
 		return nil, err
 	}
 
-	btnPause, err := button.New("(S)tart", func() error {
+	btnPause, err := button.New("(P)ause", func() error {
 		go pauseInterval()
 		return nil
 	},
