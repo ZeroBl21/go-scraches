@@ -6,6 +6,7 @@
 This repository contains random experiments and tests in Golang, based on:
 
 - _"Network Programming with Go"_.
+- _"Powerful Command-Line Applications In Go"_.
 
 ## Purpose
 
