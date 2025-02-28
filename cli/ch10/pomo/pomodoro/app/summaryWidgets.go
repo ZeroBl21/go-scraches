@@ -22,7 +22,6 @@ type summary struct {
 func newSummary(
 	ctx context.Context,
 	config *pomodoro.IntervalConfig,
-	redrawCh chan<- bool,
 	errorCh chan<- error,
 ) (*summary, error) {
 	s := &summary{

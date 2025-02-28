@@ -39,7 +39,7 @@ func New(config *pomodoro.IntervalConfig) (*App, error) {
 		return nil, err
 	}
 
-	sum, err := newSummary(ctx, config, redrawCh, errCh)
+	sum, err := newSummary(ctx, config, errCh)
 	if err != nil {
 		return nil, err
 	}
