@@ -34,12 +34,17 @@ func New(config *pomodoro.IntervalConfig) (*App, error) {
 	redrawCh := make(chan bool)
 	errCh := make(chan error)
 
-	w, err := newWidgets(ctx, errCh)
+	wid, err := newWidgets(ctx, errCh)
 	if err != nil {
 		return nil, err
 	}
 
-	btnSet, err := newButtonSet(ctx, config, w, redrawCh, errCh)
+	sum, err := newSummary(ctx, config, redrawCh, errCh)
+	if err != nil {
+		return nil, err
+	}
+
+	btnSet, err := newButtonSet(ctx, config, wid, sum, redrawCh, errCh)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +54,7 @@ func New(config *pomodoro.IntervalConfig) (*App, error) {
 		return nil, err
 	}
 
-	container, err := newGrid(btnSet, w, term)
+	container, err := newGrid(btnSet, wid, sum, term)
 	if err != nil {
 		return nil, err
 	}

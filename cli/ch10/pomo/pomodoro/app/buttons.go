@@ -17,7 +17,8 @@ type buttonSet struct {
 func newButtonSet(
 	ctx context.Context,
 	config *pomodoro.IntervalConfig,
-	w *widgets,
+	wid *widgets,
+	sum *summary,
 	redrawCh chan<- bool,
 	errCh chan<- error,
 ) (*buttonSet, error) {
@@ -31,17 +32,18 @@ func newButtonSet(
 				msg = "Focus on your task"
 			}
 
-			w.update([]int{}, i.Category, msg, "", redrawCh)
+			wid.update([]int{}, i.Category, msg, "", redrawCh)
 		}
 
 		periodic := func(i pomodoro.Interval) {
-			w.update(
+			wid.update(
 				[]int{int(i.ActualDuration), int(i.PlannedDuration)},
 				"", "", fmt.Sprint(i.PlannedDuration-i.ActualDuration), redrawCh)
 		}
 
 		end := func(i pomodoro.Interval) {
-			w.update([]int{}, "", "Nothing running...", "", redrawCh)
+			wid.update([]int{}, "", "Nothing running...", "", redrawCh)
+			sum.update(redrawCh)
 		}
 
 		errCh <- i.Start(ctx, config, start, periodic, end)
@@ -62,7 +64,7 @@ func newButtonSet(
 			return
 		}
 
-		w.update([]int{}, "", "Paused... press start to continue", "", redrawCh)
+		wid.update([]int{}, "", "Paused... press start to continue", "", redrawCh)
 	}
 
 	btnStart, err := button.New("(S)tart", func() error {
