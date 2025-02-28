@@ -207,7 +207,7 @@ func (r *dbRepo) CategorySummary(day time.Time, filter string) (time.Duration, e
 	strftime('%Y-%m-%d', ?, 'localtime')`
 
 	var ds sql.NullInt64
-	err := r.db.QueryRow(query, filter).Scan(&ds)
+	err := r.db.QueryRow(query, filter, day).Scan(&ds)
 
 	var d time.Duration
 	if ds.Valid {
