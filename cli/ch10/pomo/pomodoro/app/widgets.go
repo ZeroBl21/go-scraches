@@ -123,7 +123,7 @@ func newDonut(
 			select {
 			case d := <-donUpdater:
 				if d[0] <= d[1] {
-					errCh <- don.Absolute(d[0], d[1])
+					errCh <- don.Absolute(d[1]-d[0], d[1])
 				}
 
 			case <-ctx.Done():
