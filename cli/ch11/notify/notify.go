@@ -4,6 +4,7 @@ import (
 	"runtime"
 
 	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type Severity int
@@ -24,7 +25,7 @@ func New(title, message string, severity Severity) *Notify {
 	return &Notify{
 		title:    title,
 		message:  message,
-		severity: SeverityLow,
+		severity: severity,
 	}
 }
 
@@ -41,10 +42,11 @@ func (s Severity) String() string {
 	}
 
 	if runtime.GOOS == "darwin" {
-		sev = cases.Title(sev)
+		caser := cases.Title(language.English)
+		sev = caser.String(sev)
 	}
 
-	if runtime.GOOS == "windows	" {
+	if runtime.GOOS == "windows" {
 		switch s {
 		case SeverityLow:
 			sev = "Info"
