@@ -33,6 +33,7 @@ func newButtonSet(
 			}
 
 			wid.update([]int{}, i.Category, msg, "", redrawCh)
+			send_notification(msg)
 		}
 
 		periodic := func(i pomodoro.Interval) {
@@ -44,6 +45,9 @@ func newButtonSet(
 		end := func(i pomodoro.Interval) {
 			wid.update([]int{}, "", "Nothing running...", "", redrawCh)
 			sum.update(redrawCh)
+
+			msg := fmt.Sprintf("%s finished !", i.Category)
+			send_notification(msg)
 		}
 
 		errCh <- i.Start(ctx, config, start, periodic, end)
