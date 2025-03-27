@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	api "github.com/ZeroBl21/dsg/ch01/proglog/api/v1"
+	"google.golang.org/grpc"
 )
 
 type Config struct {
@@ -23,7 +24,19 @@ type grpcServer struct {
 	*Config
 }
 
-func newgrpcServer(config *Config) (*grpcServer, error) {
+func NewGRPCServer(config *Config) (*grpc.Server, error) {
+	gSrv := grpc.NewServer()
+	srv, err := newGRPCServer(config)
+	if err != nil {
+		return nil, err
+	}
+
+	api.RegisterLogServer(gSrv, srv)
+
+	return gSrv, nil
+}
+
+func newGRPCServer(config *Config) (*grpcServer, error) {
 	srv := &grpcServer{Config: config}
 
 	return srv, nil
