@@ -123,11 +123,11 @@ func (a *Agent) setupMembership() error {
 
 	var opts []grpc.DialOption
 
-	if a.Config.PerrTLSConfig != nil {
+	if a.Config.PeerTLSConfig != nil {
 		opts = append(
 			opts,
 			grpc.WithTransportCredentials(
-				credentials.NewTLS((a.Config.PerrTLSConfig)),
+				credentials.NewTLS((a.Config.PeerTLSConfig)),
 			),
 		)
 	}
@@ -186,7 +186,7 @@ func (a *Agent) Shutdown() error {
 
 type Config struct {
 	ServerTLSConfig *tls.Config
-	PerrTLSConfig   *tls.Config
+	PeerTLSConfig   *tls.Config
 
 	DataDir        string
 	BindAddr       string
