@@ -233,7 +233,11 @@ func (d *DistributedLog) WaitForLeader(timeout time.Duration) error {
 		case <-timeoutCh:
 			return fmt.Errorf("timed out")
 		case <-ticker.C:
-			if d := d.raft.Leader(); d != "" {
+			fmt.Println("----------------------------")
+			fmt.Println("Tick")
+			fmt.Println(d.raft.Leader())
+			fmt.Println("----------------------------")
+			if l := d.raft.Leader(); l != "" {
 				return nil
 			}
 		}
